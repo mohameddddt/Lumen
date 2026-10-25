@@ -4,6 +4,10 @@ A calm, fast, offline gallery app for Android, built with Kotlin and Jetpack Com
 
 **Design:** an editorial look of warm paper and ink with a single coral accent. Titles use the Instrument Serif display font and the interface uses Manrope. Icons are thin line icons, navigation is a floating frosted-glass dock, and the chips, switches, segmented controls and video scrubber are custom.
 
+## Download
+
+Get the latest APK from [Releases](https://github.com/mohameddddt/Lumen/releases/latest). Open it on your phone and allow installing from that source when Android asks. Requires Android 11 or newer.
+
 ## Features
 
 - **Photos timeline** grouped by day (or by month at 5+ columns), with pinch-to-resize grid (2–6 columns)
@@ -38,7 +42,18 @@ Use the **release** build on a phone. It is optimized with R8 and ships startup 
 ./gradlew installDebug           # debug build for development (slower)
 ```
 
-The release build is signed with the local debug key so it can be sideloaded. Use a real signing key before publishing to a store.
+### Release signing
+
+Release builds are signed with the key described in `keystore.properties` at the project root. That file is git-ignored, so it never reaches the repo:
+
+```properties
+storeFile=C:/path/to/lumen-release.jks
+storePassword=...
+keyAlias=lumen
+keyPassword=...
+```
+
+Without that file, release builds fall back to the local debug key, so anyone who clones the repo can still build and install.
 
 ## Project layout
 
