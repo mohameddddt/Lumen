@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 
@@ -47,6 +48,23 @@ tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+/** Media management access (Android 12+) skips the system confirmation for trash, delete and rename. */
+val manageMediaSupported: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+fun Context.canManageMedia(): Boolean =
+    manageMediaSupported && MediaStore.canManageMedia(this)
+
+fun Context.openManageMediaSettings() {
+    if (!manageMediaSupported) return
+    runCatching {
+        startActivity(
+            Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA, Uri.fromParts("package", packageName, null))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+    }.onFailure { openAppSettings() }
 }
 
 fun Context.openAppSettings() {

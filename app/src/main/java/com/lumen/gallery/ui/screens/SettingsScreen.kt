@@ -30,14 +30,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -62,6 +67,9 @@ import com.lumen.gallery.ui.components.topBarClearance
 import com.lumen.gallery.ui.theme.Lumen
 import com.lumen.gallery.ui.theme.LumenIcons
 import com.lumen.gallery.util.Format
+import com.lumen.gallery.util.canManageMedia
+import com.lumen.gallery.util.manageMediaSupported
+import com.lumen.gallery.util.openManageMediaSettings
 import dev.chrisbanes.haze.rememberHazeState
 
 @Composable
@@ -74,6 +82,10 @@ fun SettingsScreen(vm: GalleryViewModel, onBack: () -> Unit) {
     val listState = rememberLazyListState()
     val haze = rememberHazeState()
     val scrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+    val context = LocalContext.current
+    // Granted or revoked on a system screen, so read it again whenever we come back.
+    var canManageMedia by remember { mutableStateOf(context.canManageMedia()) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { canManageMedia = context.canManageMedia() }
 
     Box(
         Modifier
@@ -155,6 +167,15 @@ fun SettingsScreen(vm: GalleryViewModel, onBack: () -> Unit) {
                         subtitle = "Resurface memories from past years",
                         checked = settings.showMemories,
                         onChange = vm::setShowMemories,
+                    )
+                    Divider()
+                    ToggleRow(
+                        icon = LumenIcons.Trash,
+                        title = "Delete without asking",
+                        subtitle = if (manageMediaSupported) "Skip Android's confirmation when deleting or renaming" else "Needs Android 12 or newer",
+                        checked = canManageMedia,
+                        enabled = manageMediaSupported,
+                        onChange = { context.openManageMediaSettings() },
                     )
                 }
             }
