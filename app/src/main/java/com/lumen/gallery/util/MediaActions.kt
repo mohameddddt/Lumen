@@ -80,9 +80,11 @@ class MediaActions internal constructor(
     }
 
     fun edit(item: MediaItem) {
+        // Read access only: we don't hold write access to other apps' media, and asking to pass it
+        // on makes Android refuse to start the editor at all. Editors save their result as a copy.
         val intent = Intent(Intent.ACTION_EDIT)
-            .setDataAndType(item.uri, item.mimeType)
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            .setDataAndType(item.uri, item.mimeType.ifBlank { "image/*" })
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         startChooser(intent, "Edit with")
     }
 
