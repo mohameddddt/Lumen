@@ -92,7 +92,9 @@ import com.lumen.gallery.util.findActivity
 import com.lumen.gallery.util.rememberMediaActions
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import androidx.media3.common.MediaItem as ExoMediaItem
 
 private const val SLIDESHOW_INTERVAL_MS = 3500L
@@ -178,7 +180,13 @@ private fun ViewerContent(
         while (true) {
             delay(SLIDESHOW_INTERVAL_MS)
             val next = (pagerState.currentPage + 1) % pagerState.pageCount
-            if (next == 0) pagerState.scrollToPage(0) else pagerState.animateScrollToPage(next, animationSpec = tween(650))
+            // A swipe mid-transition cancels the page animation; keep the slideshow going
+            // unless the slideshow itself was stopped.
+            try {
+                if (next == 0) pagerState.scrollToPage(0) else pagerState.animateScrollToPage(next, animationSpec = tween(650))
+            } catch (e: CancellationException) {
+                ensureActive()
+            }
         }
     }
 
